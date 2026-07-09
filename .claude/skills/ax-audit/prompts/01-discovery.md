@@ -3,7 +3,13 @@
 **Target of this stage:** Does the agent surface the company *unprompted*, when a developer
 who doesn't yet know the product exists asks a generic question about the problem space?
 
-## What the generated prompt must do
+## This stage uses a POOL
+Discovery generates **several (≈3) different generic phrasings**, written as separate `.txt`
+files in a `discovery/` directory. The runs cycle through them, so you sample phrasing
+variance (a broad question, a previews-angle question, a deploy-to-own-cloud question…),
+moving generic → narrowing toward the company's niche — but no phrasing may name a product.
+
+## What each generated prompt must do
 - Sound like a real developer in the company's target audience asking an **open** question
   about their category or problem — *before* they know any specific product.
 - Ask for recommendations / options, so the agent has to name products.

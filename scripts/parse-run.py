@@ -59,13 +59,22 @@ def main():
     ap.add_argument("--raw", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--run", type=int, required=True)
+    ap.add_argument("--prompt-file", default="")
     ap.add_argument("--company-domains", default="")
     args = ap.parse_args()
 
     domains = [d.strip() for d in args.company_domains.split(",") if d.strip()]
 
+    prompt_text = ""
+    if args.prompt_file:
+        try:
+            prompt_text = open(args.prompt_file, encoding="utf-8", errors="replace").read()
+        except OSError:
+            pass
+
     rec = {
         "run": args.run,
+        "prompt": prompt_text,          # the exact prompt this run used (matters for pools)
         "session_id": None,
         "num_turns": None,
         "total_cost_usd": None,

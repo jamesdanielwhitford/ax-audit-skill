@@ -42,7 +42,12 @@ The report never computes scores; it only renders what the enrichment pass wrote
   "id": "discovery",
   "title": "Discovery",
   "intent": "Can an agent find you when a developer asks an open question?",
-  "prompt": "I'm a developer choosing a deployment platform. What are the top options...",
+  "prompt": "I'm building a full-stack app and need somewhere to host it...",  // representative
+  "prompt_pool": [                    // Discovery cycles a pool; other stages have 1 entry
+    { "file": "01-host.txt",     "text": "..." },
+    { "file": "02-previews.txt", "text": "..." },
+    { "file": "03-owncloud.txt", "text": "..." }
+  ],
 
   "score": 1,                         // 1-4, enrichment pass
   "band": "FAIL",
@@ -54,6 +59,11 @@ The report never computes scores; it only renders what the enrichment pass wrote
 }
 ```
 
+**Pooled vs. repeated prompts.** Discovery cycles a **pool** of several generic phrasings
+across its runs (each run records the exact `prompt` it used — see the Run object). The other
+three stages repeat a single prompt, so their `prompt_pool` has one entry. The report shows
+each run's own `prompt` so the reader sees which phrasing produced which answer.
+
 ## Run object
 
 Observed fields come from `parse-run.py`; judged fields are added by enrichment.
@@ -62,6 +72,7 @@ Observed fields come from `parse-run.py`; judged fields are added by enrichment.
 {
   // --- observed (runner) ---
   "run": 1,
+  "prompt": "I'm building a full-stack app and need somewhere to host it...",  // this run's exact prompt
   "session_id": "cdfa8df3-...",
   "num_turns": 4,
   "total_cost_usd": 0.245,

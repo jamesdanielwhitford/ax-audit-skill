@@ -60,8 +60,14 @@ single confirmation, then proceed. Do not stop for prompt-by-prompt approval.
 
 ### 2. Generate the prompts (per stage, from the research)
 
-For each stage, write a concrete prompt to `audits/<slug>/prompts/NN-stage.txt`, following
-that stage's `prompts/NN-*.md` spec — its target, its guardrails, and its example register.
+Follow each stage's `prompts/NN-*.md` spec — its target, guardrails, and example register.
+
+- **Discovery uses a POOL.** Write several (≈3) different generic phrasings to a *directory*
+  `audits/<slug>/prompts/discovery/*.txt` — e.g. a broad "where do I host this?", a
+  previews-angle one, a deploy-to-own-cloud one. The runs cycle through them, so you sample
+  phrasing variance (generic → narrowing toward the niche), never naming a product.
+- **Recommendation / Comparison / Agent-Tooling use a SINGLE prompt** each, written to
+  `audits/<slug>/prompts/NN-stage.txt` and repeated across runs.
 
 **Leak guardrail (critical, non-negotiable):**
 - **Discovery and Recommendation prompts must NOT contain the company name or any competitor
@@ -79,18 +85,24 @@ Every prompt ends with: *"list every URL you consulted under a Sources heading."
 
 ### 3. Run each stage (the runner)
 
-For each stage, run its generated prompt N times as clean-context, **web-enabled** children:
+For each stage, run its prompt(s) N times as clean-context, **web-enabled** children. Point
+`--prompt` at the Discovery *directory* (pool) or at a single-file prompt for the others:
 
 ```bash
+# Discovery — pass the pool DIRECTORY; runs cycle through the phrasings
 scripts/run-stage.sh \
-  --prompt-file audits/<slug>/prompts/01-discovery.txt \
-  --runs <N> \
-  --out audits/<slug>/stages/discovery \
-  --stage discovery \
-  --company-domains "release.com,docs.release.com"
+  --prompt audits/<slug>/prompts/discovery \
+  --runs <N> --out audits/<slug>/stages/discovery \
+  --stage discovery --company-domains "release.com,docs.release.com"
+
+# Recommendation / Comparison / Agent-Tooling — single prompt file, repeated
+scripts/run-stage.sh \
+  --prompt audits/<slug>/prompts/02-recommendation.txt \
+  --runs <N> --out audits/<slug>/stages/recommendation \
+  --stage recommendation --company-domains "release.com,docs.release.com"
 ```
 
-Repeat for `02-recommendation`, `03-comparison`, `04-agent-tooling`.
+Repeat for `03-comparison`, `04-agent-tooling`.
 
 - No API key needed (subscription OAuth). ~$0.10–0.30 equivalent per run.
 - Runner uses `--output-format stream-json --verbose`, so tool calls and sources are captured

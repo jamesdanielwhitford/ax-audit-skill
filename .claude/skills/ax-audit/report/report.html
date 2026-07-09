@@ -155,6 +155,7 @@ function runHtml(r){
       <span class="chip">${r.num_turns??'?'} turns</span>
       <span class="chip">$${(r.total_cost_usd||0).toFixed(3)}</span>
     </div>
+    ${r.prompt?`<div class="promptbox" style="margin:10px 0">Prompt for this run: <code>${esc(r.prompt)}</code></div>`:''}
     <div class="why"><div class="k">Why this score</div>${esc(r.why||'—')}</div>
 
     <details open><summary>Agent answer</summary><div class="body"><div class="answer">${esc(r.answer||'')}</div></div></details>
