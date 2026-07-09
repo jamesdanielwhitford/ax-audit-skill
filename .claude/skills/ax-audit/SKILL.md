@@ -14,12 +14,19 @@ sample of fresh child agents, capture the real tool calls and sources, score eac
 The company being audited usually scores *badly* — that's the point. The report shows them
 exactly where agents fail to find, recommend, or correctly describe their product.
 
+## Bundled resource paths
+
+Use the directory containing this `SKILL.md` as `SKILL_DIR`. When running commands, call
+bundled resources through that path (for example, `$SKILL_DIR/scripts/run-stage.sh`) and
+write audit outputs in the user's current project.
+
 ## Core principle: intent, not templates
 
-The four stages are defined by **intent + guardrails + examples**, held in `prompts/*.md` —
-NOT by fixed prompt strings. You **research the company and write company-specific prompts**
-that fit its category and audience. The examples in `prompts/*.md` exist to anchor tone,
-scope, and the exact target of each stage — read them, match their register, don't copy them.
+The four stages are defined by **intent + guardrails + examples**, held in bundled
+`prompts/*.md` — NOT by fixed prompt strings. You **research the company and write
+company-specific prompts** that fit its category and audience. The examples in
+`prompts/*.md` exist to anchor tone, scope, and the exact target of each stage — read them,
+match their register, don't copy them.
 
 ## What you produce
 
@@ -82,7 +89,7 @@ Follow each stage's `prompts/NN-*.md` spec — its target, guardrails, and examp
 - **Discovery and Recommendation prompts must NOT contain the company name or any competitor
   name.** A mention only counts if unprompted. After writing them, verify with:
   ```bash
-  scripts/check-prompts.sh --company "Release" --domains "release.com" \
+  "$SKILL_DIR/scripts/check-prompts.sh" --company "Release" --domains "release.com" \
     --discovery audits/<slug>/prompts/01-discovery.txt \
     --recommendation audits/<slug>/prompts/02-recommendation.txt
   ```
@@ -103,7 +110,7 @@ others:
 # Discovery — pass the pool DIRECTORY; runs cycle through the phrasings.
 # Use a safe mention regex. For ambiguous company names, require product/domain context,
 # not just the bare word.
-scripts/run-stage.sh \
+"$SKILL_DIR/scripts/run-stage.sh" \
   --prompt audits/<slug>/prompts/discovery \
   --runs 3 --out audits/<slug>/stages/discovery \
   --stage discovery --company-domains "release.com,docs.release.com" \
@@ -112,7 +119,7 @@ scripts/run-stage.sh \
   --stop-on-mention-regex '<safe-company-mention-regex>'
 
 # Recommendation / Comparison / Agent-Tooling — single prompt file, repeated
-scripts/run-stage.sh \
+"$SKILL_DIR/scripts/run-stage.sh" \
   --prompt audits/<slug>/prompts/02-recommendation.txt \
   --runs 1 --out audits/<slug>/stages/recommendation \
   --stage recommendation --company-domains "release.com,docs.release.com" \
@@ -161,7 +168,7 @@ and `suggestions` = the main rationale and improvements across stages). Copy the
 to it:
 
 ```bash
-cp report/report.html audits/<slug>/report.html
+cp "$SKILL_DIR/report/report.html" audits/<slug>/report.html
 ```
 
 The report auto-loads `audit.json` from the same folder over HTTP. For a single-file,
@@ -182,7 +189,7 @@ despite web access).
 - **Budgeted by default** — child research runs use Haiku and must include per-run budget and
   web-call caps unless the user explicitly requests a deeper audit.
 - **No company/competitor names in Discovery or Recommendation prompts** — enforced by
-  `scripts/check-prompts.sh`. This protects score validity; never skip it.
+  `$SKILL_DIR/scripts/check-prompts.sh`. This protects score validity; never skip it.
 - **Discovery early stop must be credible** — pass `--stop-on-mention-regex`, but do not use
   a bare ambiguous company name like "Release" if it can match ordinary prose. Require product,
   domain, or category context in the regex.

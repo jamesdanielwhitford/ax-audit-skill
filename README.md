@@ -117,19 +117,16 @@ you explicitly ask for a deeper audit.
 
 ## Repo layout
 
+The installable skill is the source of truth. The repo keeps examples at the root, but the
+runner, prompts, rubric, schema, and report renderer all live inside the folder you copy into
+Claude Code.
+
 ```
-scripts/run-stage.sh    # runs prompts as budgeted web-enabled clean-context children
-scripts/parse-run.py    # distils a run's stream into tool calls + sources
-scripts/web-cap-hook.py # optional PreToolUse hook enforcing WebSearch/WebFetch caps
-scripts/check-prompts.sh# guards against company/competitor names leaking into
-                        #   the Discovery/Recommendation prompts (would void the score)
-prompts/*.md            # the four stage INTENT SPECS (target + guardrails + examples);
-                        #   the orchestrator writes company-specific prompts from these
-report/report.html      # self-contained Markdown/chat-style report renderer
-report/schema.md        # the audit.json data model, including key_reasons/suggestions
-report/rubric.md        # the 1–4 scoring ladders per stage
-examples/release-report-inline.html # example single-file output with inline sample data
-.claude/skills/ax-audit/SKILL.md   # the skill itself (drives the whole workflow)
+.claude/skills/ax-audit/SKILL.md        # the skill workflow
+.claude/skills/ax-audit/scripts/        # runner, parser, prompt guard, web-cap hook
+.claude/skills/ax-audit/prompts/        # four stage intent specs
+.claude/skills/ax-audit/report/         # report renderer, schema, rubric
+examples/release-report-inline.html     # example single-file output with inline data
 ```
 
 ## Requirements
