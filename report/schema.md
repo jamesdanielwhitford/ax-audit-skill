@@ -44,7 +44,16 @@ The report never computes scores; it only renders what the enrichment pass wrote
     "band": "POOR",                   // FAIL | POOR | OK | GOOD (see rubric.md)
     "summary": "Release is absent from generic and constrained deployment-platform
                 queries; the agent only reaches release.com when the company is named
-                directly. Strong docs once found, but discoverability is the gap."
+                directly. Strong docs once found, but discoverability is the gap.",
+    "key_reasons": [
+      "Absent from open Discovery prompts.",
+      "Not recommended for the ideal use case.",
+      "Only sourced when named directly."
+    ],
+    "suggestions": [
+      "Publish root-domain llms.txt that points agents to the best docs.",
+      "Create comparison and use-case pages that match the prompts developers ask agents."
+    ]
   },
 
   "stages": [ /* one Stage object per stage, in order */ ]
@@ -71,6 +80,15 @@ The report never computes scores; it only renders what the enrichment pass wrote
   "summary": "Release did not appear in any of the 5 runs. The agent consistently
               recommends Vercel, Railway, Render, Fly.io and cites third-party
               comparison articles — never release.com.",
+  "key_reasons": [
+    "Release was absent from every Discovery answer.",
+    "The agent recommended competitors and third-party comparison content instead.",
+    "`company_domain_hits` was empty across the stage."
+  ],
+  "suggestions": [
+    "Add pages and docs that use the category language agents search for.",
+    "Seed agent-readable docs and comparison pages that explain the product's niche."
+  ],
   "run_policy": {
     "requested_runs": 3,
     "actual_runs": 1,
@@ -147,7 +165,14 @@ Observed fields come from `parse-run.py`; judged fields are added by enrichment.
   "mentioned": false,                 // did the answer mention the company at all?
   "recommended": "no",                // "no" | "listed" | "top3" | "top" 
   "why": "Lists Vercel, Railway, Render, Fly.io and Heroku; Release never appears.
-          Sources are third-party comparison blogs. company_domain_hits is empty."
+          Sources are third-party comparison blogs. company_domain_hits is empty.",
+  "key_reasons": [
+    "No mention in the answer.",
+    "No company-owned source was fetched."
+  ],
+  "suggestions": [
+    "Improve discoverability for the exact category and use-case phrasing in this prompt."
+  ]
 }
 ```
 
@@ -158,6 +183,11 @@ Observed fields come from `parse-run.py`; judged fields are added by enrichment.
   so it's an *observed* fact, not a judgement.
 - **`mentioned` / `recommended`** are quick booleans/enums the enrichment pass fills so
   the report can show per-run chips without re-reading the prose.
+- **`summary` / `why` support Markdown.** The report renders common Markdown syntax
+  (headings, lists, links, code, bold, code fences) so these fields can be readable without
+  becoming HTML.
+- **`key_reasons` / `suggestions`** are optional arrays on `overall`, Stage, and Run objects.
+  Prefer them for scannable rationale and next steps; the report shows them as labeled lists.
 - **`band`** is always derivable from `score` (1=FAIL, 2=POOR, 3=OK, 4=GOOD) but is
   stored explicitly so the report stays a dumb renderer.
 - A stage `score` is the enrichment pass's holistic 1-4 for the stage — usually near

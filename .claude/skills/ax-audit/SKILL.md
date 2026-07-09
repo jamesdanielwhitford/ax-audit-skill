@@ -142,17 +142,23 @@ continue the enrichment/report step with Opus. For **each run**, read `answer` +
 - `mentioned` (bool); `recommended` (`"no" | "listed" | "top3" | "top"`).
 - `why` — 1–3 sentences citing the evidence (position in list, empty `company_domain_hits`,
   any wrong claim). A confident-but-wrong Comparison claim is a 1 even if mentioned — say so.
+- `key_reasons` — 2–4 short bullets explaining the run score in plain language.
+- `suggestions` — 1–3 concrete improvements that would help this exact prompt outcome
+  (omit only when there is genuinely nothing useful to suggest).
 
 Then score the **stage** holistically (near the mean of run scores; weight down confident-wrong
-answers). Write `stage.score/band/summary/title/intent/prompt`.
+answers). Write `stage.score/band/summary/title/intent/prompt`, plus stage-level
+`key_reasons` and `suggestions`. Keep `summary` concise and use Markdown where helpful; the
+HTML report renders Markdown and shows the lists in labeled sections.
 
 ### 5. Assemble `audit.json` and drop in the report
 
 Build `audits/<slug>/audit.json` matching `report/schema.md` (top-level `company`, `domains`,
 `category`, `competitors`, `generated_at`, `runs_per_stage` as an object, `run_policy`,
 `mode: "web-enabled"`, the enriched or explicitly skipped `stages`, then `overall`: score =
-rounded mean of non-skipped stage scores; summary = the headline finding). Copy the report
-next to it:
+rounded mean of non-skipped stage scores; `summary` = the headline finding; `key_reasons`
+and `suggestions` = the main rationale and improvements across stages). Copy the report next
+to it:
 
 ```bash
 cp report/report.html audits/<slug>/report.html

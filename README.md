@@ -28,11 +28,14 @@ Discovery runs adaptively (minimum 1, maximum 3), while the remaining stages run
 
 Every response is scored **1–4** (FAIL / POOR / OK / GOOD) on the
 [Ritza AX rubric](https://techstackups.com/articles/how-to-do-an-ax-audit/), with a
-"why", and the report highlights any tool call that sourced *your own* documentation.
+Markdown-rendered "why", key reasons, and concrete suggestions. The report highlights any
+tool call that sourced *your own* documentation.
 
-The result is a self-contained **HTML report** — an overall score, a tab per stage with its
-score and summary, and per-run detail showing the exact prompt, the agent's answer, every
-tool call it made, and the sources it fetched.
+The result is a self-contained **HTML report** — an overall score, a tab per stage with
+Markdown-rendered summaries, key reasons, suggestions, score-colored run tabs, and per-run
+detail. Each run shows **Why This Score** before a chat-style transcript with the user prompt
+and agent response bubbles, followed by tool calls and sources. Agent answers can include
+headings, lists, code, links, and Markdown tables.
 
 ## How the data is captured
 
@@ -68,8 +71,8 @@ scripts/check-prompts.sh# guards against company/competitor names leaking into
                         #   the Discovery/Recommendation prompts (would void the score)
 prompts/*.md            # the four stage INTENT SPECS (target + guardrails + examples);
                         #   the orchestrator writes company-specific prompts from these
-report/report.html      # self-contained report renderer (reads audit.json)
-report/schema.md        # the audit.json data model
+report/report.html      # self-contained Markdown/chat-style report renderer
+report/schema.md        # the audit.json data model, including key_reasons/suggestions
 report/rubric.md        # the 1–4 scoring ladders per stage
 .claude/skills/ax-audit/SKILL.md   # the skill itself (drives the whole workflow)
 ```

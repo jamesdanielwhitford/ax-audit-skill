@@ -18,6 +18,7 @@
   body{margin:0;font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
        background:var(--bg);color:var(--text)}
   a{color:var(--accent)}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
   .wrap{max-width:960px;margin:0 auto;padding:28px 20px 80px}
   header.top h1{margin:0 0 4px;font-size:26px}
   header.top .sub{color:var(--muted);font-size:14px}
@@ -31,6 +32,12 @@
   .overview .row{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
   .bigscore{font-size:40px;font-weight:800;line-height:1}
   .overview p{color:var(--text);margin:14px 0 0}
+  .summary-text{margin-top:14px}
+  .insights{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:14px}
+  .insight{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px}
+  .insight h3{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .insight ul{margin:0;padding-left:18px}
+  .insight li{margin:5px 0}
   .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:18px}
   .card{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px}
   .card .lbl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
@@ -45,16 +52,26 @@
   .panelbox{background:var(--panel2);border:1px solid var(--border);border-radius:0 12px 12px 12px;padding:20px}
   .stage-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
   .stage-head h2{margin:0;font-size:20px}
+  .section-title{margin:18px 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:800}
   .intent{color:var(--muted);font-size:14px;margin:6px 0 0}
   .stage-summary{margin:14px 0 0;padding:12px 14px;background:var(--panel);border:1px solid var(--border);
                  border-radius:10px}
   .promptbox{margin-top:14px;font-size:13px;color:var(--muted)}
   .promptbox code{background:var(--panel);padding:2px 6px;border-radius:5px;color:var(--text)}
+  .stage-prompt{margin-top:14px}
   /* run subtabs */
   .runtabs{display:flex;gap:6px;flex-wrap:wrap;margin:20px 0 0}
   .runtab{padding:6px 11px;border:1px solid var(--border);background:var(--panel);border-radius:8px;
           cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);display:flex;gap:7px;align-items:center}
   .runtab.active{color:var(--text);background:var(--bg)}
+  .runtab.s1{border-color:color-mix(in srgb,var(--fail) 60%,var(--border))}
+  .runtab.s2{border-color:color-mix(in srgb,var(--poor) 60%,var(--border))}
+  .runtab.s3{border-color:color-mix(in srgb,var(--ok) 60%,var(--border))}
+  .runtab.s4{border-color:color-mix(in srgb,var(--good) 60%,var(--border))}
+  .runtab.s1.active{background:color-mix(in srgb,var(--fail) 14%,var(--bg))}
+  .runtab.s2.active{background:color-mix(in srgb,var(--poor) 14%,var(--bg))}
+  .runtab.s3.active{background:color-mix(in srgb,var(--ok) 14%,var(--bg))}
+  .runtab.s4.active{background:color-mix(in srgb,var(--good) 14%,var(--bg))}
   .run{margin-top:16px}
   .run .meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
   .chip{font-size:12px;padding:2px 9px;border-radius:999px;border:1px solid var(--border);color:var(--muted)}
@@ -64,10 +81,41 @@
   .why{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent);
        border-radius:8px;padding:11px 13px;margin:10px 0}
   .why .k{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .chat{display:flex;flex-direction:column;gap:14px;margin:16px 0}
+  .msgrow{display:flex}
+  .msgrow.user{justify-content:flex-end}
+  .msgrow.agent{justify-content:flex-start}
+  .bubble{max-width:min(760px,92%);border:1px solid var(--border);border-radius:14px;padding:12px 14px;
+          box-shadow:0 1px 0 rgba(0,0,0,.08);position:relative}
+  .bubble.user{background:color-mix(in srgb,var(--accent) 20%,var(--panel));border-color:color-mix(in srgb,var(--accent) 45%,var(--border))}
+  .bubble.agent{background:var(--panel)}
+  .bubble.user:after,.bubble.agent:after{content:"";position:absolute;bottom:12px;width:12px;height:12px;
+        background:inherit;border:inherit;transform:rotate(45deg)}
+  .bubble.user:after{right:-6px;border-left:0;border-bottom:0}
+  .bubble.agent:after{left:-6px;border-right:0;border-top:0}
+  .bubble .role{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px;font-weight:700}
   details{margin:12px 0;border:1px solid var(--border);border-radius:9px;background:var(--panel)}
   details>summary{cursor:pointer;padding:10px 13px;font-weight:600;user-select:none}
   details .body{padding:0 14px 14px}
-  .answer{white-space:pre-wrap;font-size:14px}
+  .md{font-size:14px;line-height:1.58}
+  .md>:first-child{margin-top:0}
+  .md>:last-child{margin-bottom:0}
+  .md p{margin:9px 0}
+  .md h1,.md h2,.md h3{margin:14px 0 7px;line-height:1.25}
+  .md h1{font-size:18px}.md h2{font-size:16px}.md h3{font-size:15px}
+  .md ul,.md ol{margin:8px 0;padding-left:22px}
+  .md li{margin:5px 0}
+  .md pre{white-space:pre-wrap;overflow-x:auto;background:var(--bg);border:1px solid var(--border);
+          border-radius:8px;padding:10px;font-size:12.5px}
+  .md code{background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:1px 4px;font-size:.92em}
+  .md pre code{background:transparent;border:0;padding:0}
+  .md blockquote{margin:10px 0;padding:8px 12px;border-left:3px solid var(--accent);color:var(--muted)}
+  .md .tablewrap{overflow-x:auto;margin:12px 0;border:1px solid var(--border);border-radius:8px}
+  .md table{width:100%;border-collapse:collapse;font-size:13px;background:var(--panel)}
+  .md th,.md td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;text-align:left}
+  .md th{background:var(--panel2);font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+  .md tr:last-child td{border-bottom:0}
+  .answer{font-size:14px}
   .toolcall{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;padding:8px 10px;
             border:1px solid var(--border);border-radius:7px;margin:7px 0;overflow-x:auto}
   .toolcall.hit{border-color:var(--good);background:color-mix(in srgb,var(--good) 10%,transparent)}
@@ -102,6 +150,115 @@
 const BANDS = {1:['FAIL','b1'],2:['POOR','b2'],3:['OK','b3'],4:['GOOD','b4']};
 const DOTCOLOR = {1:'var(--fail)',2:'var(--poor)',3:'var(--ok)',4:'var(--good)'};
 const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const escAttr = s => esc(s).replace(/'/g,'&#39;');
+
+function safeUrl(url){
+  const u=String(url||'').trim();
+  if(/^(https?:|mailto:|#)/i.test(u)) return u;
+  return '#';
+}
+
+function inlineMd(text){
+  let s=esc(text);
+  s=s.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,(_,label,url)=>
+    `<a href="${escAttr(safeUrl(url))}" target="_blank" rel="noreferrer">${label}</a>`);
+  s=s.replace(/`([^`]+)`/g,'<code>$1</code>');
+  s=s.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+  s=s.replace(/(^|[^\*])\*([^*\n]+)\*/g,'$1<em>$2</em>');
+  return s;
+}
+
+function splitTableRow(line){
+  let s=String(line||'').trim();
+  if(s.startsWith('|')) s=s.slice(1);
+  if(s.endsWith('|')) s=s.slice(0,-1);
+  return s.split('|').map(x=>x.trim());
+}
+
+function isTableSep(line){
+  const cells=splitTableRow(line);
+  return cells.length>1 && cells.every(c=>/^:?-{3,}:?$/.test(c.replace(/\s+/g,'')));
+}
+
+function isTableRow(line){
+  return String(line||'').includes('|') && splitTableRow(line).length>1;
+}
+
+function tableAligns(sepLine){
+  return splitTableRow(sepLine).map(c=>{
+    c=c.replace(/\s+/g,'');
+    if(c.startsWith(':') && c.endsWith(':')) return 'center';
+    if(c.endsWith(':')) return 'right';
+    return 'left';
+  });
+}
+
+function tableHtml(header, sep, rows){
+  const aligns=tableAligns(sep);
+  const width=header.length;
+  const cell=(tag, text, i)=>{
+    const align=aligns[i]||'left';
+    const style=align==='left'?'':` style="text-align:${align}"`;
+    return `<${tag}${style}>${inlineMd(text||'')}</${tag}>`;
+  };
+  const norm=row=>Array.from({length:width},(_,i)=>row[i]||'');
+  return `<div class="tablewrap"><table><thead><tr>${norm(header).map((x,i)=>cell('th',x,i)).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${norm(r).map((x,i)=>cell('td',x,i)).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+
+function md(text){
+  const lines=String(text||'').replace(/\r\n/g,'\n').split('\n');
+  const out=[]; let para=[]; let list=null; let code=false; let codeLines=[];
+  const flushPara=()=>{ if(para.length){ out.push(`<p>${inlineMd(para.join(' '))}</p>`); para=[]; } };
+  const flushList=()=>{ if(list){ out.push(`<${list.type}>${list.items.map(x=>`<li>${inlineMd(x)}</li>`).join('')}</${list.type}>`); list=null; } };
+  const flushCode=()=>{ out.push(`<pre><code>${esc(codeLines.join('\n'))}</code></pre>`); codeLines=[]; };
+  for(let idx=0; idx<lines.length; idx++){
+    const line=lines[idx];
+    if(line.trim().startsWith('```')){
+      if(code){ code=false; flushCode(); } else { flushPara(); flushList(); code=true; codeLines=[]; }
+      continue;
+    }
+    if(code){ codeLines.push(line); continue; }
+    if(!line.trim()){ flushPara(); flushList(); continue; }
+    if(isTableRow(line) && idx+1<lines.length && isTableSep(lines[idx+1])){
+      flushPara(); flushList();
+      const header=splitTableRow(line);
+      const sep=lines[idx+1];
+      const rows=[];
+      idx+=2;
+      while(idx<lines.length && lines[idx].trim() && isTableRow(lines[idx])){
+        rows.push(splitTableRow(lines[idx]));
+        idx++;
+      }
+      idx--;
+      out.push(tableHtml(header, sep, rows));
+      continue;
+    }
+    const h=line.match(/^(#{1,3})\s+(.+)$/);
+    if(h){ flushPara(); flushList(); out.push(`<h${h[1].length}>${inlineMd(h[2])}</h${h[1].length}>`); continue; }
+    const bq=line.match(/^>\s+(.+)$/);
+    if(bq){ flushPara(); flushList(); out.push(`<blockquote>${inlineMd(bq[1])}</blockquote>`); continue; }
+    const ul=line.match(/^\s*[-*]\s+(.+)$/);
+    const ol=line.match(/^\s*\d+[.)]\s+(.+)$/);
+    if(ul||ol){
+      flushPara();
+      const type=ul?'ul':'ol';
+      if(!list||list.type!==type) flushList();
+      if(!list) list={type,items:[]};
+      list.items.push((ul||ol)[1]);
+      continue;
+    }
+    para.push(line.trim());
+  }
+  if(code) flushCode();
+  flushPara(); flushList();
+  return `<div class="md">${out.join('')}</div>`;
+}
+
+function asList(value){
+  if(Array.isArray(value)) return value.filter(Boolean);
+  if(typeof value==='string' && value.trim()) return value.split(/\n+/).map(x=>x.replace(/^\s*[-*]\s+/,'').trim()).filter(Boolean);
+  return [];
+}
 
 function badge(score, label){
   if(score==null) return `<span class="badge bskip">${esc(label||'UNSCORED')}</span>`;
@@ -142,6 +299,29 @@ function runCountText(s){
   return `${actual} run${actual===1?'':'s'}`;
 }
 
+function insightPanel(title, items){
+  items=asList(items);
+  if(!items.length) return '';
+  return `<div class="insight"><h3>${esc(title)}</h3><ul>${items.map(x=>`<li>${inlineMd(x)}</li>`).join('')}</ul></div>`;
+}
+
+function insightsHtml(obj){
+  const reasons = obj.key_reasons || obj.reasons || obj.findings || [];
+  const suggestions = obj.suggestions || obj.improvements || obj.recommendations_to_improve || [];
+  const risks = obj.risks || obj.caveats || [];
+  const html = [
+    insightPanel('Key Reasons', reasons),
+    insightPanel('Suggestions', suggestions),
+    insightPanel('Caveats', risks)
+  ].filter(Boolean).join('');
+  return html ? `<div class="insights">${html}</div>` : '';
+}
+
+function section(title, body, cls=''){
+  if(!body) return '';
+  return `<div class="${cls}"><div class="section-title">${esc(title)}</div>${body}</div>`;
+}
+
 let DATA=null, stageIdx=0, runIdx={};
 
 function renderOverview(){
@@ -156,7 +336,8 @@ function renderOverview(){
       ${badge(o.score)}
       <div style="flex:1"></div>
     </div>
-    <p>${esc(o.summary||'')}</p>
+    ${section('Summary', md(o.summary||''), 'summary-text')}
+    ${insightsHtml(o)}
     <div class="cards">
       ${(DATA.stages||[]).map((s,i)=>`
         <div class="card" style="cursor:pointer" onclick="selectStage(${i})">
@@ -183,6 +364,12 @@ function toolCallHtml(tc){
     ${tc.hit_company_domain?'<span class="flag">✓ company source</span>':''}</div>`;
 }
 
+function chatHtml(r){
+  const prompt = r.prompt ? `<div class="msgrow user"><div class="bubble user"><div class="role">Prompt</div>${md(r.prompt)}</div></div>` : '';
+  const answer = `<div class="msgrow agent"><div class="bubble agent"><div class="role">Agent Response</div>${md(r.answer||'')}</div></div>`;
+  return `<div class="chat">${prompt}${answer}</div>`;
+}
+
 function runHtml(r){
   const sources = (r.result_sources||[]);
   const hits = new Set(r.company_domain_hits||[]);
@@ -200,17 +387,17 @@ function runHtml(r){
       <span class="chip">$${(r.total_cost_usd||0).toFixed(3)}</span>
       ${r.terminal_reason?`<span class="chip">${esc(r.terminal_reason)}</span>`:''}
     </div>
-    ${r.prompt?`<div class="promptbox" style="margin:10px 0">Prompt for this run: <code>${esc(r.prompt)}</code></div>`:''}
-    <div class="why"><div class="k">Why this score</div>${esc(r.why||'—')}</div>
+    ${section('Why This Score', `<div class="why">${md(r.why||'—')}</div>`)}
+    ${insightsHtml(r)}
 
-    <details open><summary>Agent answer</summary><div class="body"><div class="answer">${esc(r.answer||'')}</div></div></details>
+    ${section('Transcript', chatHtml(r))}
 
     <details><summary>Tool calls (${(r.tool_calls||[]).length})</summary><div class="body">
       ${(r.tool_calls||[]).length? r.tool_calls.map(toolCallHtml).join('') : '<div class="empty">No tool calls recorded.</div>'}
     </div></details>
 
     <details><summary>Sources returned (${sources.length})</summary><div class="body">
-      ${sources.length? `<ul class="srclist">${sources.map(u=>`<li class="${hits.has(u)?'hit':''}">${esc(u)}${hits.has(u)?' ✓':''}</li>`).join('')}</ul>`
+      ${sources.length? `<ul class="srclist">${sources.map(u=>`<li class="${hits.has(u)?'hit':''}"><a href="${escAttr(safeUrl(u))}" target="_blank" rel="noreferrer">${esc(u)}</a>${hits.has(u)?' ✓':''}</li>`).join('')}</ul>`
                        : '<div class="empty">No sources captured.</div>'}
     </div></details>
   </div>`;
@@ -237,7 +424,8 @@ function renderStage(){
     el.innerHTML = `
       <div class="stage-head">${badge(null,'SKIPPED')}<h2>${esc(s.title)}</h2></div>
       <div class="intent">${esc(s.intent||'')}</div>
-      <div class="stage-summary">${esc(s.summary||'Stage skipped.')}</div>
+      ${section('Summary', `<div class="stage-summary">${md(s.summary||'Stage skipped.')}</div>`)}
+      ${insightsHtml(s)}
       ${stagePolicyHtml(s)}
       <div class="empty">No runs recorded for this stage.</div>`;
     return;
@@ -245,12 +433,13 @@ function renderStage(){
   el.innerHTML = `
     <div class="stage-head">${badge(s.score)}<h2>${esc(s.title)}</h2></div>
     <div class="intent">${esc(s.intent||'')}</div>
-    <div class="stage-summary">${esc(s.summary||'')}</div>
-    ${s.prompt?`<div class="promptbox">Prompt: <code>${esc(s.prompt)}</code></div>`:''}
+    ${section('Summary', `<div class="stage-summary">${md(s.summary||'')}</div>`)}
+    ${insightsHtml(s)}
     ${stagePolicyHtml(s)}
     <div class="runtabs">
-      ${(s.runs||[]).map((r,i)=>`<div class="runtab ${i===ri?'active':''}" onclick="selectRun(${i})">
-        <span class="dot" style="background:${r.is_error?'var(--fail)':(DOTCOLOR[r.score]||'var(--muted)')}"></span>Run ${r.run??i+1}</div>`).join('')}
+      ${(s.runs||[]).map((r,i)=>`<div class="runtab s${r.score||''} ${i===ri?'active':''}" onclick="selectRun(${i})">
+        <span class="dot" style="background:${r.is_error?'var(--fail)':(DOTCOLOR[r.score]||'var(--muted)')}"></span>
+        Run ${r.run??i+1}${r.score!=null?` · ${(BANDS[r.score]||['?'])[0]} ${r.score}/4`:''}</div>`).join('')}
     </div>
     ${(s.runs||[])[ri]?runHtml(s.runs[ri]):'<div class="empty">No runs.</div>'}`;
 }
