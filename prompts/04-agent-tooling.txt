@@ -1,3 +1,0 @@
-I want to use {{COMPANY}} ({{DOMAIN}}) with an AI coding agent. What agent-native tooling does {{COMPANY}} provide — for example an llms.txt file, markdown versions of their docs, an OpenAPI spec, an MCP server, or installable agent skills? For each, give the URL and say whether it actually helps an agent get started.
-
-Research {{DOMAIN}} and its docs directly. At the end, list every URL you consulted under a "Sources" heading.

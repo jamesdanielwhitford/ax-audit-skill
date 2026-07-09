@@ -9,8 +9,14 @@ invisible to a fast-growing slice of the developer market. This skill quantifies
 
 ## What it does
 
-It drives isolated, clean-context Claude Code children (no personal settings, skills, or MCP
-— but **with web search + fetch**) through four stages, each run several times:
+First it **researches your company** (what it is, its category, its real competitors, its
+ideal use case, and any existing agent tooling) and confirms that understanding with you.
+Then it **writes realistic developer prompts** tailored to your product — the skill holds the
+*intent* of each stage, not fixed templates, so it works for a deployment platform, an
+observability tool, a voice API, or a database equally well.
+
+Then it drives isolated, clean-context Claude Code children (no personal settings, skills, or
+MCP — but **with web search + fetch**) through four stages, each run several times:
 
 | Stage | Question |
 |-------|----------|
@@ -52,7 +58,10 @@ domain, category, a use case, competitors, and how many runs per stage (default 
 ```
 scripts/run-stage.sh    # runs one prompt N times, web-enabled, clean context
 scripts/parse-run.py    # distils a run's stream into tool calls + sources
-prompts/*.txt           # the four stage prompt templates
+scripts/check-prompts.sh# guards against company/competitor names leaking into
+                        #   the Discovery/Recommendation prompts (would void the score)
+prompts/*.md            # the four stage INTENT SPECS (target + guardrails + examples);
+                        #   the orchestrator writes company-specific prompts from these
 report/report.html      # self-contained report renderer (reads audit.json)
 report/schema.md        # the audit.json data model
 report/rubric.md        # the 1–4 scoring ladders per stage
