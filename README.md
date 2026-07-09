@@ -37,6 +37,26 @@ detail. Each run shows **Why This Score** before a chat-style transcript with th
 and agent response bubbles, followed by tool calls and sources. Agent answers can include
 headings, lists, code, links, and Markdown tables.
 
+## Super mini tutorial
+
+Use this skill when you want to know how a fresh AI coding agent sees a company.
+
+1. Install the skill into `~/.claude/skills/`.
+2. In Claude Code, ask: `Run an AX audit on <company/domain>`.
+3. Claude researches the company, confirms the category/use case/competitors, and writes
+   realistic prompts for the four audit stages.
+4. The runner executes a small budgeted sample of fresh Claude Code child sessions: Discovery
+   runs adaptively (1-3 runs), while Recommendation / Comparison / Agent Tooling run once each.
+5. The runner records each child's real `stream-json` output: answer, web searches, fetched
+   URLs, model, cost, and errors.
+6. The judgement pass scores each run/stage with the AX rubric and writes `audit.json`.
+7. Open `audits/<slug>/report.html` beside `audit.json`, or inline the data into one
+   self-contained HTML file.
+
+The default workflow is intentionally small so you can sample AX visibility without burning
+through a Claude session limit. Ask for a deeper audit only when you are ready to spend more
+usage.
+
 ## How the data is captured
 
 The runner uses `claude -p --output-format stream-json --verbose`, so it records the real
@@ -47,6 +67,40 @@ needed; it runs on your Claude subscription (OAuth), so mind your subscription r
 By default, child research runs use `--model haiku` plus per-run budget and web-call caps.
 Discovery can stop early when a safe company-mention regex matches a completed run. Final
 scoring/judgement should be done with an Opus-class model reading the captured artifacts.
+
+## Claude spawning mini tutorial
+
+The audit does **not** use Claude subagents for the measurement runs. It starts new Claude
+Code CLI processes with `claude -p "<prompt>"`, one process per run, from a temporary working
+directory.
+
+The important runner flags are:
+
+- `--setting-sources ""` — do not load user/project/local settings for the child run.
+- `--strict-mcp-config` with no `--mcp-config` — ignore configured MCP servers, so project or
+  user MCP tools do not leak into the test.
+- `--tools "WebSearch,WebFetch"` — restrict built-in tools to web search/fetch.
+- `--allowedTools "WebSearch" "WebFetch"` — let those web tools run without interactive
+  permission prompts. This is permission control, not the restriction mechanism.
+- `--output-format stream-json --verbose` — capture every tool call and result as JSONL.
+- `--model haiku`, `--max-budget-usd ...`, and the `web-cap-hook.py` PreToolUse hook — keep
+  child research runs cheaper and bounded.
+
+How this differs from Claude subagents:
+
+- Subagents are delegated assistants inside a Claude Code session. They have their own
+  context window, prompt, tools, and permissions, and are great for codebase tasks that
+  should return a summary to the main conversation.
+- AX measurement needs a stricter product-test environment: no inherited chat history, no
+  project context, no skills, no MCP servers, and only web tools. Separate `claude -p` child
+  sessions make that isolation explicit and repeatable.
+- Subagents are optimized for context management. This runner is optimized for measurement:
+  it keeps raw JSONL audit trails for every run, so the report can prove which searches and
+  fetches happened.
+
+See the official [Claude Code CLI reference](https://code.claude.com/docs/en/cli-reference)
+and [Claude subagents docs](https://code.claude.com/docs/en/sub-agents) for the underlying
+flags and subagent behavior.
 
 ## Install
 
@@ -74,6 +128,7 @@ prompts/*.md            # the four stage INTENT SPECS (target + guardrails + exa
 report/report.html      # self-contained Markdown/chat-style report renderer
 report/schema.md        # the audit.json data model, including key_reasons/suggestions
 report/rubric.md        # the 1–4 scoring ladders per stage
+examples/release-report-inline.html # example single-file output with inline sample data
 .claude/skills/ax-audit/SKILL.md   # the skill itself (drives the whole workflow)
 ```
 
