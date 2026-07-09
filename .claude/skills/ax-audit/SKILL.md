@@ -7,9 +7,9 @@ description: Run an Agent Experience (AX) audit on a company. Researches the com
 
 You run an **Agent Experience audit**: you measure what a fresh, web-enabled Claude Code
 instance says about a company when a developer asks the kinds of questions that lead to a
-tool choice. You research the company, generate realistic prompts, run each prompt many
-times, capture the real tool calls and sources, score each response 1–4, and render an HTML
-report.
+tool choice. You research the company, generate realistic prompts, run a small budgeted
+sample of fresh child agents, capture the real tool calls and sources, score each response
+1–4, and render an HTML report.
 
 The company being audited usually scores *badly* — that's the point. The report shows them
 exactly where agents fail to find, recommend, or correctly describe their product.
@@ -54,9 +54,18 @@ the company's domain(s), establish:
 - **Existing agent tooling** — check for `/llms.txt`, markdown docs, OpenAPI, MCP, skills.
 
 Ask the user only for what you can't determine or must confirm: the exact domain(s) if
-ambiguous, and **runs per stage (default 5)**. Confirm your understanding of the company in
-one short line ("You're X, a <category>; ideal for <use case>; competitors <A/B/C>") — a
-single confirmation, then proceed. Do not stop for prompt-by-prompt approval.
+ambiguous. Use the budgeted default run policy unless the user explicitly asks for a deeper
+audit:
+
+- Discovery: adaptive, **minimum 1 / maximum 3** runs. Stop early if the company appears
+  credibly in a completed run.
+- Recommendation: **1** run.
+- Comparison: **1** run.
+- Agent Tooling: **1** run, unless the user skips it.
+
+Confirm your understanding of the company in one short line ("You're X, a <category>; ideal
+for <use case>; competitors <A/B/C>") — a single confirmation, then proceed. Do not stop for
+prompt-by-prompt approval.
 
 ### 2. Generate the prompts (per stage, from the research)
 
@@ -85,35 +94,49 @@ Every prompt ends with: *"list every URL you consulted under a Sources heading."
 
 ### 3. Run each stage (the runner)
 
-For each stage, run its prompt(s) N times as clean-context, **web-enabled** children. Point
-`--prompt` at the Discovery *directory* (pool) or at a single-file prompt for the others:
+For each stage, run its prompt(s) as clean-context, **web-enabled** children. Child research
+runs should use **Haiku** by default; reserve Opus-level judgement for the enrichment pass.
+Point `--prompt` at the Discovery *directory* (pool) or at a single-file prompt for the
+others:
 
 ```bash
-# Discovery — pass the pool DIRECTORY; runs cycle through the phrasings
+# Discovery — pass the pool DIRECTORY; runs cycle through the phrasings.
+# Use a safe mention regex. For ambiguous company names, require product/domain context,
+# not just the bare word.
 scripts/run-stage.sh \
   --prompt audits/<slug>/prompts/discovery \
-  --runs <N> --out audits/<slug>/stages/discovery \
-  --stage discovery --company-domains "release.com,docs.release.com"
+  --runs 3 --out audits/<slug>/stages/discovery \
+  --stage discovery --company-domains "release.com,docs.release.com" \
+  --model haiku \
+  --max-budget-usd 1.25 --max-web-searches 8 --max-web-fetches 8 --max-web-total 12 \
+  --stop-on-mention-regex '<safe-company-mention-regex>'
 
 # Recommendation / Comparison / Agent-Tooling — single prompt file, repeated
 scripts/run-stage.sh \
   --prompt audits/<slug>/prompts/02-recommendation.txt \
-  --runs <N> --out audits/<slug>/stages/recommendation \
-  --stage recommendation --company-domains "release.com,docs.release.com"
+  --runs 1 --out audits/<slug>/stages/recommendation \
+  --stage recommendation --company-domains "release.com,docs.release.com" \
+  --model haiku \
+  --max-budget-usd 1.25 --max-web-searches 8 --max-web-fetches 8 --max-web-total 12
 ```
 
-Repeat for `03-comparison`, `04-agent-tooling`.
+Repeat for `03-comparison`, `04-agent-tooling`. For Comparison, use a slightly higher budget
+only when the prompt asks for current pricing/limits across several vendors (for example,
+`--max-budget-usd 2 --max-web-searches 12 --max-web-fetches 12 --max-web-total 18`).
 
-- No API key needed (subscription OAuth). ~$0.10–0.30 equivalent per run.
+- No API key needed (subscription OAuth). Subscription usage limits still apply.
 - Runner uses `--output-format stream-json --verbose`, so tool calls and sources are captured
   for real — you don't rely on the agent's self-reported sources (the prompt asks for them
   too, as a cross-check).
-- Pace large batches; on rate limits, lower `--runs` and re-run the missing stage.
+- Do not run unbudgeted batches by default. If a run hits a budget/web cap, keep the error
+  record, score the stage honestly, and only rerun with higher caps if the user agrees.
 
 ### 4. Enrich each run (your judgement pass)
 
-Read each stage's `stage.json`. For **each run**, read `answer` + `tool_calls` +
-`company_domain_hits`, then add to the run object (per `report/schema.md`):
+Read each completed stage's `stage.json`. Use Opus-level judgement for this pass; if the
+current Claude Code session is not running an Opus-class model, pause and ask the user to
+continue the enrichment/report step with Opus. For **each run**, read `answer` +
+`tool_calls` + `company_domain_hits`, then add to the run object (per `report/schema.md`):
 
 - `score` (1–4) and `band`, judged against that stage's ladder in `report/rubric.md`.
 - `mentioned` (bool); `recommended` (`"no" | "listed" | "top3" | "top"`).
@@ -126,9 +149,10 @@ answers). Write `stage.score/band/summary/title/intent/prompt`.
 ### 5. Assemble `audit.json` and drop in the report
 
 Build `audits/<slug>/audit.json` matching `report/schema.md` (top-level `company`, `domains`,
-`category`, `competitors`, `generated_at`, `runs_per_stage`, `mode: "web-enabled"`, the four
-enriched `stages`, then `overall`: score = rounded mean of stage scores; summary = the
-headline finding). Copy the report next to it:
+`category`, `competitors`, `generated_at`, `runs_per_stage` as an object, `run_policy`,
+`mode: "web-enabled"`, the enriched or explicitly skipped `stages`, then `overall`: score =
+rounded mean of non-skipped stage scores; summary = the headline finding). Copy the report
+next to it:
 
 ```bash
 cp report/report.html audits/<slug>/report.html
@@ -149,8 +173,13 @@ despite web access).
 ## Guardrails
 
 - **Always web-enabled** — the runner grants WebSearch + WebFetch. No model-knowledge-only mode.
+- **Budgeted by default** — child research runs use Haiku and must include per-run budget and
+  web-call caps unless the user explicitly requests a deeper audit.
 - **No company/competitor names in Discovery or Recommendation prompts** — enforced by
   `scripts/check-prompts.sh`. This protects score validity; never skip it.
+- **Discovery early stop must be credible** — pass `--stop-on-mention-regex`, but do not use
+  a bare ambiguous company name like "Release" if it can match ordinary prose. Require product,
+  domain, or category context in the regex.
 - **Don't fabricate runs or scores.** Every run in `audit.json` comes from a real
   `run-NN.json`; every score traces to the rubric and the observed answer.
 - **Report is a dumb renderer** — never computes scores. Fix numbers in `audit.json`, not the HTML.

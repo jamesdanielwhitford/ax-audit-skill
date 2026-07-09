@@ -16,7 +16,8 @@ Then it **writes realistic developer prompts** tailored to your product — the 
 observability tool, a voice API, or a database equally well.
 
 Then it drives isolated, clean-context Claude Code children (no personal settings, skills, or
-MCP — but **with web search + fetch**) through four stages, each run several times:
+MCP — but **with web search + fetch**) through four stages using a budgeted default sample:
+Discovery runs adaptively (minimum 1, maximum 3), while the remaining stages run once each.
 
 | Stage | Question |
 |-------|----------|
@@ -38,8 +39,11 @@ tool call it made, and the sources it fetched.
 The runner uses `claude -p --output-format stream-json --verbose`, so it records the real
 tool calls — the exact `WebSearch` queries and `WebFetch` URLs — not just counts. The
 prompts also ask the agent to list its sources, as a cross-check. No Anthropic API key is
-needed; it runs on your Claude subscription (OAuth), so mind your subscription rate limits
-on big batches.
+needed; it runs on your Claude subscription (OAuth), so mind your subscription rate limits.
+
+By default, child research runs use `--model haiku` plus per-run budget and web-call caps.
+Discovery can stop early when a safe company-mention regex matches a completed run. Final
+scoring/judgement should be done with an Opus-class model reading the captured artifacts.
 
 ## Install
 
@@ -50,14 +54,16 @@ git clone https://github.com/jamesdanielwhitford/ax-audit-skill
 cp -r ax-audit-skill/.claude/skills/ax-audit ~/.claude/skills/
 ```
 
-Then in Claude Code: **"Run an AX audit on my company"** — the skill will ask for your
-domain, category, a use case, competitors, and how many runs per stage (default 5).
+Then in Claude Code: **"Run an AX audit on my company"** — the skill will confirm your
+domain, category, use case, and competitors, then use the budgeted default workflow unless
+you explicitly ask for a deeper audit.
 
 ## Repo layout
 
 ```
-scripts/run-stage.sh    # runs one prompt N times, web-enabled, clean context
+scripts/run-stage.sh    # runs prompts as budgeted web-enabled clean-context children
 scripts/parse-run.py    # distils a run's stream into tool calls + sources
+scripts/web-cap-hook.py # optional PreToolUse hook enforcing WebSearch/WebFetch caps
 scripts/check-prompts.sh# guards against company/competitor names leaking into
                         #   the Discovery/Recommendation prompts (would void the score)
 prompts/*.md            # the four stage INTENT SPECS (target + guardrails + examples);

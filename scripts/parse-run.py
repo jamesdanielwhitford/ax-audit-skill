@@ -11,7 +11,7 @@ extracts exactly the fields the AX-audit report needs:
   - WebFetch URLs and WebSearch queries, separated
   - sources/links surfaced in tool_result content (best-effort)
   - which of those hit the audited company's own domain(s)
-  - the result envelope's cost / turns / session_id / error flag
+  - the result envelope's model / cost / turns / session_id / error flag
 
 Usage:
   parse-run.py --raw run-01.raw.jsonl --out run-01.json --run 1 \
@@ -76,9 +76,13 @@ def main():
         "run": args.run,
         "prompt": prompt_text,          # the exact prompt this run used (matters for pools)
         "session_id": None,
+        "model": None,
+        "model_usage": {},
         "num_turns": None,
         "total_cost_usd": None,
         "is_error": None,
+        "terminal_reason": None,
+        "permission_denials": [],
         "answer": "",
         "tool_calls": [],
         "fetched_urls": [],
@@ -93,6 +97,9 @@ def main():
         et = ev.get("type")
 
         if et == "assistant":
+            model = ev.get("message", {}).get("model")
+            if model and not rec["model"]:
+                rec["model"] = model
             for c in ev.get("message", {}).get("content", []):
                 if c.get("type") == "text" and c.get("text", "").strip():
                     last_assistant_text = c["text"]
@@ -132,6 +139,9 @@ def main():
             rec["num_turns"] = ev.get("num_turns")
             rec["total_cost_usd"] = ev.get("total_cost_usd")
             rec["is_error"] = ev.get("is_error")
+            rec["model_usage"] = ev.get("modelUsage") or {}
+            rec["terminal_reason"] = ev.get("terminal_reason")
+            rec["permission_denials"] = ev.get("permission_denials") or []
             if isinstance(ev.get("result"), str) and ev["result"].strip():
                 last_assistant_text = ev["result"]
 

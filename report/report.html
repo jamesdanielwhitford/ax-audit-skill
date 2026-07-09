@@ -24,6 +24,7 @@
   .badge{display:inline-block;padding:3px 10px;border-radius:999px;color:#fff;font-weight:700;
          font-size:12px;letter-spacing:.03em}
   .b1{background:var(--fail)} .b2{background:var(--poor)} .b3{background:var(--ok)} .b4{background:var(--good)}
+  .bskip{background:var(--muted)}
   /* overview */
   .overview{background:var(--panel);border:1px solid var(--border);border-radius:14px;
             padding:22px;margin:22px 0}
@@ -58,6 +59,8 @@
   .run .meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
   .chip{font-size:12px;padding:2px 9px;border-radius:999px;border:1px solid var(--border);color:var(--muted)}
   .chip.hit{border-color:var(--good);color:var(--good)}
+  .chip.err{border-color:var(--fail);color:var(--fail)}
+  .chip.skip{border-color:var(--muted);color:var(--muted)}
   .why{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent);
        border-radius:8px;padding:11px 13px;margin:10px 0}
   .why .k{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
@@ -100,7 +103,44 @@ const BANDS = {1:['FAIL','b1'],2:['POOR','b2'],3:['OK','b3'],4:['GOOD','b4']};
 const DOTCOLOR = {1:'var(--fail)',2:'var(--poor)',3:'var(--ok)',4:'var(--good)'};
 const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
-function badge(score){ const [b,c]=BANDS[score]||['?','']; return `<span class="badge ${c}">${b} · ${score||'?'}/4</span>`; }
+function badge(score, label){
+  if(score==null) return `<span class="badge bskip">${esc(label||'UNSCORED')}</span>`;
+  const [b,c]=BANDS[score]||['?',''];
+  return `<span class="badge ${c}">${b} · ${score||'?'}/4</span>`;
+}
+
+function formatCaps(caps){
+  if(!caps) return '';
+  const parts=[];
+  if(caps.max_budget_usd!=null) parts.push(`budget $${caps.max_budget_usd}`);
+  if(caps.max_turns!=null) parts.push(`${caps.max_turns} turns max`);
+  if(caps.max_web_searches!=null) parts.push(`${caps.max_web_searches} searches max`);
+  if(caps.max_web_fetches!=null) parts.push(`${caps.max_web_fetches} fetches max`);
+  if(caps.max_web_total!=null) parts.push(`${caps.max_web_total} web calls max`);
+  return parts.join(' · ');
+}
+
+function formatRunPolicy(){
+  if(DATA.run_policy_summary) return DATA.run_policy_summary;
+  const rp=DATA.run_policy||{};
+  const parts=[];
+  if(typeof DATA.runs_per_stage==='number') parts.push(`${DATA.runs_per_stage} runs/stage`);
+  else if(DATA.runs_per_stage && typeof DATA.runs_per_stage==='object'){
+    parts.push(Object.entries(DATA.runs_per_stage).map(([k,v])=>`${k}: ${v}`).join(' · '));
+  }
+  if(rp.runner_model) parts.push(`runner: ${rp.runner_model}`);
+  const caps=formatCaps(rp.caps);
+  if(caps) parts.push(caps);
+  return parts.filter(Boolean).join(' · ');
+}
+
+function runCountText(s){
+  if(s.skipped) return 'skipped';
+  const actual=(s.run_policy&&s.run_policy.actual_runs)!=null ? s.run_policy.actual_runs : (s.runs||[]).length;
+  const requested=s.run_policy&&s.run_policy.requested_runs;
+  if(requested && requested!==actual) return `${actual}/${requested} runs`;
+  return `${actual} run${actual===1?'':'s'}`;
+}
 
 let DATA=null, stageIdx=0, runIdx={};
 
@@ -108,8 +148,7 @@ function renderOverview(){
   const o=DATA.overall||{};
   document.getElementById('title').textContent = `AX Audit — ${DATA.company||'Report'}`;
   document.getElementById('subtitle').textContent =
-    [DATA.category, DATA.mode, (DATA.runs_per_stage!=null?`${DATA.runs_per_stage} runs/stage`:''),
-     DATA.generated_at].filter(Boolean).join(' · ');
+    [DATA.category, DATA.mode, formatRunPolicy(), DATA.generated_at].filter(Boolean).join(' · ');
   const el=document.getElementById('overview');
   el.innerHTML = `
     <div class="row">
@@ -123,7 +162,8 @@ function renderOverview(){
         <div class="card" style="cursor:pointer" onclick="selectStage(${i})">
           <div class="lbl">${esc(s.title)}</div>
           <div class="val">${s.score!=null?s.score:'?'}<span style="font-size:13px;color:var(--muted)">/4</span></div>
-          <div class="d">${badge(s.score)}</div>
+          <div class="d">${badge(s.score, s.skipped?'SKIPPED':'UNSCORED')}</div>
+          <div class="d">${esc(runCountText(s))}${s.run_policy&&s.run_policy.stopped_early?' · stopped early':''}</div>
         </div>`).join('')}
     </div>`;
 }
@@ -148,12 +188,17 @@ function runHtml(r){
   const hits = new Set(r.company_domain_hits||[]);
   return `<div class="run">
     <div class="meta">
-      ${badge(r.score)}
+      ${badge(r.score, r.is_error?'ERROR':'UNSCORED')}
+      ${r.is_error?`<span class="chip err">error</span>`:''}
       ${r.mentioned!=null?`<span class="chip">${r.mentioned?'mentioned':'not mentioned'}</span>`:''}
       ${r.recommended?`<span class="chip">rec: ${esc(r.recommended)}</span>`:''}
       ${(r.company_domain_hits||[]).length?`<span class="chip hit">✓ ${r.company_domain_hits.length} company source(s)</span>`:'<span class="chip">no company source</span>'}
+      ${r.model?`<span class="chip">${esc(r.model)}</span>`:''}
       <span class="chip">${r.num_turns??'?'} turns</span>
+      <span class="chip">${(r.search_queries||[]).length} searches</span>
+      <span class="chip">${(r.fetched_urls||[]).length} fetches</span>
       <span class="chip">$${(r.total_cost_usd||0).toFixed(3)}</span>
+      ${r.terminal_reason?`<span class="chip">${esc(r.terminal_reason)}</span>`:''}
     </div>
     ${r.prompt?`<div class="promptbox" style="margin:10px 0">Prompt for this run: <code>${esc(r.prompt)}</code></div>`:''}
     <div class="why"><div class="k">Why this score</div>${esc(r.why||'—')}</div>
@@ -171,19 +216,41 @@ function runHtml(r){
   </div>`;
 }
 
+function stagePolicyHtml(s){
+  const rp=s.run_policy||{};
+  const bits=[];
+  if(rp.requested_runs!=null) bits.push(`${runCountText(s)} requested/max`);
+  if(rp.runner_model) bits.push(`runner: ${rp.runner_model}`);
+  const caps=formatCaps(rp.caps);
+  if(caps) bits.push(caps);
+  if(rp.stopped_early && rp.stop_reason) bits.push(rp.stop_reason);
+  if(!bits.length) return '';
+  return `<div class="promptbox">Run policy: <code>${esc(bits.join(' · '))}</code></div>`;
+}
+
 function renderStage(){
   const s=DATA.stages[stageIdx]; if(!s)return;
   if(runIdx[stageIdx]==null) runIdx[stageIdx]=0;
   const ri=runIdx[stageIdx];
   const el=document.getElementById('stagepanel');
+  if(s.skipped){
+    el.innerHTML = `
+      <div class="stage-head">${badge(null,'SKIPPED')}<h2>${esc(s.title)}</h2></div>
+      <div class="intent">${esc(s.intent||'')}</div>
+      <div class="stage-summary">${esc(s.summary||'Stage skipped.')}</div>
+      ${stagePolicyHtml(s)}
+      <div class="empty">No runs recorded for this stage.</div>`;
+    return;
+  }
   el.innerHTML = `
     <div class="stage-head">${badge(s.score)}<h2>${esc(s.title)}</h2></div>
     <div class="intent">${esc(s.intent||'')}</div>
     <div class="stage-summary">${esc(s.summary||'')}</div>
     ${s.prompt?`<div class="promptbox">Prompt: <code>${esc(s.prompt)}</code></div>`:''}
+    ${stagePolicyHtml(s)}
     <div class="runtabs">
       ${(s.runs||[]).map((r,i)=>`<div class="runtab ${i===ri?'active':''}" onclick="selectRun(${i})">
-        <span class="dot" style="background:${DOTCOLOR[r.score]||'var(--muted)'}"></span>Run ${r.run??i+1}</div>`).join('')}
+        <span class="dot" style="background:${r.is_error?'var(--fail)':(DOTCOLOR[r.score]||'var(--muted)')}"></span>Run ${r.run??i+1}</div>`).join('')}
     </div>
     ${(s.runs||[])[ri]?runHtml(s.runs[ri]):'<div class="empty">No runs.</div>'}`;
 }
