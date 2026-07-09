@@ -37,6 +37,30 @@ detail. Each run shows **Why This Score** before a chat-style transcript with th
 and agent response bubbles, followed by tool calls and sources. Agent answers can include
 headings, lists, code, links, and Markdown tables.
 
+## How the data is captured
+
+The runner uses `claude -p --output-format stream-json --verbose`, so it records the real
+tool calls — the exact `WebSearch` queries and `WebFetch` URLs — not just counts. The
+prompts also ask the agent to list its sources, as a cross-check. No Anthropic API key is
+needed; it runs on your Claude subscription (OAuth), so mind your subscription rate limits.
+
+By default, child research runs use `--model haiku` plus per-run budget and web-call caps.
+Discovery can stop early when a safe company-mention regex matches a completed run. Final
+scoring/judgement should be done with an Opus-class model reading the captured artifacts.
+
+## Install
+
+Copy the skill into your Claude Code skills directory:
+
+```bash
+git clone https://github.com/jamesdanielwhitford/ax-audit-skill
+cp -r ax-audit-skill/.claude/skills/ax-audit ~/.claude/skills/
+```
+
+Then in Claude Code: **"Run an AX audit on my company"** — the skill will confirm your
+domain, category, use case, and competitors, then use the budgeted default workflow unless
+you explicitly ask for a deeper audit.
+
 ## Super mini tutorial
 
 Use this skill when you want to know how a fresh AI coding agent sees a company.
@@ -56,17 +80,6 @@ Use this skill when you want to know how a fresh AI coding agent sees a company.
 The default workflow is intentionally small so you can sample AX visibility without burning
 through a Claude session limit. Ask for a deeper audit only when you are ready to spend more
 usage.
-
-## How the data is captured
-
-The runner uses `claude -p --output-format stream-json --verbose`, so it records the real
-tool calls — the exact `WebSearch` queries and `WebFetch` URLs — not just counts. The
-prompts also ask the agent to list its sources, as a cross-check. No Anthropic API key is
-needed; it runs on your Claude subscription (OAuth), so mind your subscription rate limits.
-
-By default, child research runs use `--model haiku` plus per-run budget and web-call caps.
-Discovery can stop early when a safe company-mention regex matches a completed run. Final
-scoring/judgement should be done with an Opus-class model reading the captured artifacts.
 
 ## Claude spawning mini tutorial
 
@@ -101,19 +114,6 @@ How this differs from Claude subagents:
 See the official [Claude Code CLI reference](https://code.claude.com/docs/en/cli-reference)
 and [Claude subagents docs](https://code.claude.com/docs/en/sub-agents) for the underlying
 flags and subagent behavior.
-
-## Install
-
-Copy the skill into your Claude Code skills directory:
-
-```bash
-git clone https://github.com/jamesdanielwhitford/ax-audit-skill
-cp -r ax-audit-skill/.claude/skills/ax-audit ~/.claude/skills/
-```
-
-Then in Claude Code: **"Run an AX audit on my company"** — the skill will confirm your
-domain, category, use case, and competitors, then use the budgeted default workflow unless
-you explicitly ask for a deeper audit.
 
 ## Repo layout
 
