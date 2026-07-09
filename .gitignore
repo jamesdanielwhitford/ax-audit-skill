@@ -1,0 +1,4 @@
+# per-audit output (raw runs can be large); keep the skill, not the runs
+audits/
+*.raw.jsonl
+__pycache__/

@@ -1,0 +1,3 @@
+How does {{COMPANY}} compare to {{COMPETITORS}} for {{USECASE}}? Cover pricing, key features, and any notable limitations. Be specific with concrete numbers where you can.
+
+Research the current details rather than relying on memory. At the end, list every URL you consulted under a "Sources" heading.

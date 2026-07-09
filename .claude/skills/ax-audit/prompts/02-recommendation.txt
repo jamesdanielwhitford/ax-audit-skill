@@ -1,0 +1,3 @@
+I'm building {{USECASE}} and I need a {{CATEGORY}}. Which specific product would you recommend, and why? If there are strong alternatives, rank your top three.
+
+Feel free to research current options. At the end, list every URL you consulted under a "Sources" heading.

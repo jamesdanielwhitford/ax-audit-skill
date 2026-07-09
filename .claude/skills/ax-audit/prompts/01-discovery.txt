@@ -1,0 +1,3 @@
+I'm a developer choosing a {{CATEGORY}}. What are the top options I should consider?
+
+Give me your top recommendations with a sentence on each. Research current options if useful. At the end, list every URL you consulted under a "Sources" heading.
